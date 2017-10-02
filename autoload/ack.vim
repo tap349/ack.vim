@@ -51,8 +51,6 @@ function! ack#Ack(cmd, args) "{{{
   "       allow for passing arguments etc
   let l:escaped_args = escape(l:grepargs, '|#%')
 
-  echo "Searching ..."
-
   if g:ack_use_dispatch
     call s:SearchWithDispatch(l:grepprg, l:escaped_args, l:grepformat)
   else
