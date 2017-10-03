@@ -99,7 +99,11 @@ function! ack#ShowResults(args) "{{{
   if empty(l:list)
     execute l:close_handler
     redraw!
+
+    echohl WarningMsg
     echo "No match found for " . a:args
+    echohl Normal
+
     return
   endif
 
