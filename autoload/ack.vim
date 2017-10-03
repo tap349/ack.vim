@@ -59,7 +59,7 @@ function! ack#Ack(cmd, args) "{{{
 
   " Dispatch has no callback mechanism currently, we just have to display the
   " list window early and wait for it to populate :-/
-  call ack#ShowResults()
+  call ack#ShowResults(l:grepargs)
   call s:Highlight(l:grepargs)
 endfunction "}}}
 
@@ -92,7 +92,17 @@ function! ack#AckWindow(cmd, args) "{{{
   call ack#Ack(a:cmd, args)
 endfunction "}}}
 
-function! ack#ShowResults() "{{{
+function! ack#ShowResults(args) "{{{
+  let l:list = s:UsingLocList() ? getloclist(0) : getqflist()
+  let l:close_handler = s:UsingLocList() ? 'lclose' : 'cclose'
+
+  if empty(l:list)
+    execute l:close_handler
+    redraw!
+    echo "No match found for " . a:args
+    return
+  endif
+
   let l:handler = s:UsingLocList() ? g:ack_lhandler : g:ack_qhandler
   execute l:handler
   call s:ApplyMappings()
@@ -111,8 +121,6 @@ function! s:ApplyMappings() "{{{
   let l:wintype = s:UsingLocList() ? 'l' : 'c'
   let l:closemap = ':' . l:wintype . 'close<CR>'
   let g:ack_mappings.q = l:closemap
-
-  nnoremap <buffer> <silent> ? :call <SID>QuickHelp()<CR>
 
   if g:ack_autoclose
     " We just map the 'go' and 'gv' mappings to close on autoclose, wtf?
@@ -165,19 +173,6 @@ function! s:Init(cmd) "{{{
     call s:Warn('Dispatch does not support location lists! Proceeding with quickfix...')
     let s:using_loclist = 0
   endif
-endfunction "}}}
-
-function! s:QuickHelp() "{{{
-  execute 'edit' globpath(&rtp, 'doc/ack_quick_help.txt')
-
-  silent normal gg
-  setlocal buftype=nofile bufhidden=hide nobuflisted
-  setlocal nomodifiable noswapfile
-  setlocal filetype=help
-  setlocal nonumber norelativenumber nowrap
-  setlocal foldmethod=diff foldlevel=20
-
-  nnoremap <buffer> <silent> ? :q!<CR>:call ack#ShowResults()<CR>
 endfunction "}}}
 
 function! s:SearchWithDispatch(grepprg, grepargs, grepformat) "{{{
